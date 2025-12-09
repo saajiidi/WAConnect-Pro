@@ -60,10 +60,7 @@ class WhatsAppLinkGenerator:
         if len(digits) == 13 and digits.startswith('8801'):
             return '+' + digits
 
-        # Generic handling for other cases
-        if digits.startswith('0') and len(digits) > 10:
-            # Remove leading 0 for countries that use it
-            digits = digits[1:]
+    
         
         # Add + prefix if not present
         if not phone.startswith('+'):
