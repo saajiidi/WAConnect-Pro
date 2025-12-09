@@ -47,12 +47,20 @@ class WhatsAppLinkGenerator:
     def normalize_phone(self, phone):
         """Normalize phone number to E.164 format"""
         if not isinstance(phone, str):
-            return phone
+            phone = str(phone) if phone is not None else ""
         
         # Extract digits
         digits = re.sub(r'[^\d]', '', phone)
+
+        # Handle Bangladesh numbers (11 digits starting with 01)
+        if len(digits) == 11 and digits.startswith('01'):
+            return '+88' + digits
         
-        # Handle different country codes
+        # Handle Bangladesh numbers already with 88 (13 digits starting with 8801)
+        if len(digits) == 13 and digits.startswith('8801'):
+            return '+' + digits
+
+        # Generic handling for other cases
         if digits.startswith('0') and len(digits) > 10:
             # Remove leading 0 for countries that use it
             digits = digits[1:]
@@ -184,25 +192,25 @@ class WhatsAppLinkGenerator:
         """Save the dataframe to an Excel file"""
         try:
             # Create a writer object
-            writer = pd.ExcelWriter(output_path, engine='openpyxl')
-            
-            # Write the dataframe to the Excel file
-            df.to_excel(writer, index=False, sheet_name='WhatsApp Links')
-            
-            # Get the workbook and worksheet
-            workbook = writer.book
-            worksheet = writer.sheets['WhatsApp Links']
-            
-            # Make the WhatsApp links clickable
-            for row in range(2, len(df) + 2):  # +2 because of 1-indexing and header row
-                cell = worksheet.cell(row=row, column=df.columns.get_loc('WhatsApp Link') + 1)
-                if cell.value:
-                    cell.hyperlink = cell.value
-                    cell.style = "Hyperlink"
-            
-            # Save the Excel file
-            writer.save()
+            with pd.ExcelWriter(output_path, engine='openpyxl') as writer:
+                # Write the dataframe to the Excel file
+                df.to_excel(writer, index=False, sheet_name='WhatsApp Links')
+                
+                # Get the workbook and worksheet
+                workbook = writer.book
+                worksheet = writer.sheets['WhatsApp Links']
+                
+                # Make the WhatsApp links clickable
+                # Note: openpyxl 3.1+ might require different handling, but for 3.0.10:
+                # We need to access the cells. 
+                # Since we are inside the context manager, the file is saved when exiting.
+                
+                for row in range(2, len(df) + 2):  # +2 because of 1-indexing and header row
+                    cell = worksheet.cell(row=row, column=df.columns.get_loc('WhatsApp Link') + 1)
+                    if cell.value:
+                        cell.hyperlink = cell.value
+                        cell.style = "Hyperlink"
+                
             return True
         except Exception as e:
-            print(f"Error saving Excel file: {str(e)}")
-            return False
+            raise Exception(f"Error saving Excel file: {str(e)}")
