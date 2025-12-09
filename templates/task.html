@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing Status - WhatsApp Link Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 2rem;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #25D366;
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background-color: #25D366;
+            border-color: #25D366;
+        }
+        .btn-primary:hover {
+            background-color: #128C7E;
+            border-color: #128C7E;
+        }
+        .whatsapp-logo {
+            color: #25D366;
+            font-size: 2rem;
+        }
+        .progress {
+            height: 25px;
+        }
+        .progress-bar {
+            background-color: #25D366;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="text-center mb-4">
+                    <i class="bi bi-whatsapp whatsapp-logo"></i>
+                    <h1 class="mt-2">Processing Status</h1>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-hourglass-split me-2"></i>Task Status
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span id="status-text">Checking status...</span>
+                                <span id="progress-text">0%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" id="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <p id="message-text" class="text-muted">Initializing...</p>
+                        </div>
+                        <div id="result-container" class="d-none">
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle me-2"></i>Your file is ready for download!
+                            </div>
+                            <div class="d-grid">
+                                <a href="/download/{{ task_id }}" class="btn btn-primary">
+                                    <i class="bi bi-download me-2"></i>Download Result
+                                </a>
+                            </div>
+                            <div class="mt-3">
+                                <h6>Detected Columns:</h6>
+                                <ul id="columns-list">
+                                    <!-- Will be populated by JavaScript -->
+                                </ul>
+                            </div>
+                        </div>
+                        <div id="error-container" class="d-none">
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle me-2"></i>An error occurred during processing.
+                            </div>
+                            <p id="error-text" class="text-danger"></p>
+                        </div>
+                        <div class="mt-3">
+                            <a href="/" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Home
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const taskId = '{{ task_id }}';
+            const statusText = document.getElementById('status-text');
+            const progressText = document.getElementById('progress-text');
+            const progressBar = document.getElementById('progress-bar');
+            const messageText = document.getElementById('message-text');
+            const resultContainer = document.getElementById('result-container');
+            const errorContainer = document.getElementById('error-container');
+            const errorText = document.getElementById('error-text');
+            const columnsList = document.getElementById('columns-list');
+            
+            function checkStatus() {
+                fetch(`/status/${taskId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        statusText.textContent = data.status;
+                        progressText.textContent = `${data.progress}%`;
+                        progressBar.style.width = `${data.progress}%`;
+                        progressBar.setAttribute('aria-valuenow', data.progress);
+                        messageText.textContent = data.message;
+                        
+                        if (data.status === 'Completed') {
+                            resultContainer.classList.remove('d-none');
+                            
+                            // Display detected columns
+                            if (data.columns) {
+                                columnsList.innerHTML = '';
+                                
+                                if (data.columns.phone) {
+                                    columnsList.innerHTML += `<li><strong>Phone:</strong> ${data.columns.phone}</li>`;
+                                }
+                                if (data.columns.email) {
+                                    columnsList.innerHTML += `<li><strong>Email:</strong> ${data.columns.email}</li>`;
+                                }
+                                if (data.columns.name) {
+                                    columnsList.innerHTML += `<li><strong>Name:</strong> ${data.columns.name}</li>`;
+                                }
+                            }
+                        } else if (data.status === 'Failed') {
+                            errorContainer.classList.remove('d-none');
+                            errorText.textContent = data.error;
+                        } else {
+                            // Continue checking
+                            setTimeout(checkStatus, 2000);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking status:', error);
+                        errorContainer.classList.remove('d-none');
+                        errorText.textContent = 'Failed to check task status. Please try again later.';
+                    });
+            }
+            
+            // Initial status check
+            checkStatus();
+        });
+    </script>
+</body>
+</html>
