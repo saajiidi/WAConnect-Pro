@@ -14,15 +14,15 @@ class WhatsAppLinkGenerator:
         self.email_pattern = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
         self.name_patterns = [
             re.compile(r'\b(name|full.?name|first.?name|last.?name|contact|person)\b', re.IGNORECASE),
-            re.compile(r'\b(名前|氏名|姓名|お名前)\b')  # Japanese name patterns
+          
         ]
         self.phone_patterns = [
             re.compile(r'\b(phone|telephone|mobile|contact|tel)\b', re.IGNORECASE),
-            re.compile(r'\b(電話|携帯|スマホ|TEL)\b')  # Japanese phone patterns
+           
         ]
         self.email_patterns = [
             re.compile(r'\b(email|e.?mail|mail)\b', re.IGNORECASE),
-            re.compile(r'\b(メール|mail|E-MAIL)\b')  # Japanese email patterns
+           
         ]
 
     def normalize_text(self, text):
@@ -60,11 +60,12 @@ class WhatsAppLinkGenerator:
         if len(digits) == 13 and digits.startswith('8801'):
             return '+' + digits
 
+        if len(digits) == 10 and digits.startswith('1'):
+            return '+880' + digits
+        
+
     
         
-        # Add + prefix if not present
-        if not phone.startswith('+'):
-            phone = '+' + digits
         
         return phone
 
