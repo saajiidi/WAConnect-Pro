@@ -1,0 +1,10 @@
+[project]
+name = "waconnect-pro"
+version = "0.1.0"
+description = "WhatsApp Bulk Link Generator"
+requires-python = ">=3.9"
+dependencies = [
+    "Flask",
+    "pandas",
+    "openpyxl",
+]
