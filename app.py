@@ -1,14 +1,29 @@
 import os
 import tempfile
+import sys
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file
 from werkzeug.utils import secure_filename
 from whatsapp_generator import WhatsAppLinkGenerator
 from datetime import datetime
 
-app = Flask(__name__)
+if getattr(sys, 'frozen', False):
+    template_folder = os.path.join(sys._MEIPASS, 'templates')
+    app = Flask(__name__, template_folder=template_folder)
+else:
+    app = Flask(__name__)
 # Use a consistent secret key for sessions, ideally from env var, but this is fine for now
 app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
-app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
+# Set up portable data directory
+if getattr(sys, 'frozen', False):
+    base_dir = os.path.dirname(sys.executable)
+else:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+data_dir = os.path.join(base_dir, 'data')
+if not os.path.exists(data_dir):
+    os.makedirs(data_dir)
+
+app.config['UPLOAD_FOLDER'] = data_dir
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size
 
 def allowed_file(filename):
