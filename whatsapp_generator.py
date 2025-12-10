@@ -63,10 +63,6 @@ class WhatsAppLinkGenerator:
         if len(digits) == 10 and digits.startswith('1'):
             return '+880' + digits
         
-
-    
-        
-        
         return phone
 
     def identify_columns(self, df):
